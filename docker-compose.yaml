@@ -1,0 +1,43 @@
+version: "3.5"
+services:
+  mysql:
+    image: mariadb
+    networks:
+      - keycloak-network
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    ports:
+      - 127.0.0.1:3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: luvr
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    restart: always
+
+  keycloak:
+    image: jboss/keycloak:16.1.1
+    networks:
+      - keycloak-network
+    depends_on:
+      - mysql
+    environment:
+      DB_VENDOR: mysql
+      DB_ADDR: mysql
+      DB_DATABASE: luvr
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      # админ уже создан, по этому может падать, еще может падать потому-что пытается отправить запрос в базу которой еще нет
+      # решение - запускать базу перед sso
+#      KEYCLOAK_USER: admin
+#      KEYCLOAK_PASSWORD: admin
+      JDBC_PARAMS: "useSSL=false"
+    ports:
+      - 127.0.0.1:8080:8080
+
+
+networks:
+  keycloak-network:
+    name: 'keycloak-network'
+    external: false
